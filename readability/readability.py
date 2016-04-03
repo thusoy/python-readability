@@ -37,6 +37,7 @@ REGEXES = {
     #skipFootnoteLink:      /^\s*(\[?[a-z0-9]{1,2}\]?|^|edit|citation needed)\s*$/i,
 }
 
+PY2 = sys.version_info[0] < 3
 
 class Unparseable(ValueError):
     pass
@@ -196,7 +197,7 @@ class Document:
                     return cleaned_article
         except Exception as e:
             log.exception('error getting summary: ')
-            if sys.version_info[0] == 2:
+            if PY2:
                 from .compat.two import raise_with_traceback
             else:
                 from .compat.three import raise_with_traceback
@@ -600,12 +601,12 @@ def main():
 
     file = None
     if options.url:
-        if sys.version_info[0] == 3:
-            import urllib.request, urllib.parse, urllib.error
-            file = urllib.request.urlopen(options.url)
-        else:
+        if PY2:
             import urllib2
             file = urllib2.urlopen(options.url)
+        else:
+            import urllib.request, urllib.parse, urllib.error
+            file = urllib.request.urlopen(options.url)
     else:
         file = open(args[0], 'rt')
     try:
@@ -621,10 +622,10 @@ def main():
         else:
             enc = sys.__stdout__.encoding or 'utf-8' # XXX: this hack could not always work, better to set PYTHONIOENCODING
             result = 'Title:' + doc.short_title() + '\n' + doc.summary()
-            if sys.version_info[0] == 3:
-                print(result)
-            else:
+            if PY2:
                 print(result.encode(enc, 'replace'))
+            else:
+                print(result)
     finally:
         file.close()
 
